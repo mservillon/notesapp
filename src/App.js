@@ -2,9 +2,11 @@ import logo from './logo.svg';
 import './App.css';
 import React, {useEffect, useReducer} from 'react'
 import { API } from 'aws-amplify'
-import { List } from 'antd'
+import { List, Input, Button } from 'antd'
 import 'antd/dist/reset.css'
+import { v4 as uuid } from 'uuid'
 import { listNotes } from './graphql/queries'
+import { createNote as CreateNote } from './graphql/mutations'
 
 const initialState = {
   notes: [],
