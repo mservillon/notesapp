@@ -10,6 +10,7 @@ import { createNote as CreateNote,
          deleteNote as DeleteNote,
          updateNote as UpdateNote 
   } from './graphql/mutations'
+import { onCreateNote } from './graphql/subscriptions'
 
 const CLIENT_ID = uuid()
 
@@ -104,7 +105,7 @@ const App = () => {
       })
       console.log('note successfully updated!')
     } catch (err) {
-      console.log('error: ', err)
+      console.error('error: ', err)
     }
   }
 
@@ -114,7 +115,18 @@ const App = () => {
 
   useEffect(() => {
     fetchNotes()
-  }, [])
+    const subscription = API.graphql({
+      query: onCreateNote
+    })
+      .subscribe({
+        next: noteData => {
+          const note = noteData.value.data.onCreateNote
+          if (CLIENT_ID === note.clientId) return
+          dispatch({ type: 'ADD_NOTE', note })
+        }
+      })
+      return () => subscription.unsubscribe()
+    }, [])
 
   const styles = {
     container: {padding: 20},
