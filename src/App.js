@@ -21,6 +21,7 @@ const initialState = {
   form: { name: '', description: '' }
 }
 
+
 function reducer(state, action) {
   switch(action.type) {
     case 'SET_NOTES':
@@ -31,6 +32,8 @@ function reducer(state, action) {
       return { ...state, form: initialState.form }
     case 'SET_INPUT':
       return { ...state, form: { ...state.form, [action.name]: action.value } }
+    case 'AMOUNT':
+      return { ...state, notes: action.notes, counter: true}
     case 'ERROR':
       return { ...state, loading: false, error: true }
     default:
@@ -81,16 +84,25 @@ const App = () => {
     const notes = [
       ...state.notes.slice(0, index), // will probably use filter
       ...state.notes.slice(index + 1)];
-    dispatch({ type: 'SET_NOTES', notes })
-    try {
-      await API.graphql({
-        query: DeleteNote,
-        variables: { input: { id } }
-      })
-      console.log('successfully deleted note!')
-      } catch (err) {
-        console.error({ err })
-    }
+      dispatch({ type: 'SET_NOTES', notes });
+
+    const verify = prompt("Are you sure you want to delete?, type delete");
+
+    if (verify == "delete") {
+        try {
+          await API.graphql({
+            query: DeleteNote,
+            variables: { input: { id } }
+          })
+          console.log('successfully deleted note!')
+        } catch (err) {
+          console.error({ err })
+        }
+        alert("Successfully deleted note!")
+  } else {
+      alert("Wrong input or pressed cancel. Delete cancelled")
+      return fetchNotes();
+  }
   }
 
   const updateNote = async(note) => {
@@ -98,6 +110,7 @@ const App = () => {
     const notes = [...state.notes]
     notes[index].completed = !note.completed
     dispatch({ type: 'SET_NOTES', notes})
+    
     try {
       await API.graphql({
         query: UpdateNote,
@@ -142,7 +155,8 @@ const App = () => {
         actions={[
           <p style={styles.p} onClick={() => deleteNote(item)}>Delete</p>,
           <p style={styles.p} onClick={() => updateNote(item)}>
-          {item.completed ? 'completed' : 'mark completed'}</p>
+          {item.completed ? 'completed' : 'mark completed'}
+          </p>
         ]}
         >
         <List.Item.Meta
@@ -173,6 +187,9 @@ const App = () => {
         onClick={createNote}
         type="primary"
       >Create Note</Button>
+      <hr />
+        <h3>{(state.notes).length} total notes</h3>
+      <hr />
     <List
         loading={state.loading}
         dataSource={state.notes}
