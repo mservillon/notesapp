@@ -45,12 +45,11 @@ function reducer(state, action) {
 const App = () => {
 
   const [state, dispatch] = useReducer(reducer, initialState)
-  const [number, setNumber] = useState(0);
 
   const notes = [...state.notes]
   const completion = notes
               .filter(x => x.completed == true)
-  console.log((completion).length)
+  console.log(completion.length)
 
   const fetchNotes = async() => {
     try {
@@ -148,57 +147,6 @@ const App = () => {
       })
       return () => subscription.unsubscribe()
     }, [])
-
-  useEffect(() => {
-    // const updateNote = async(note) => {
-    //   const index = state.notes.findIndex(n => n.id === note.id)
-    //   const notes = [...state.notes]
-    //   notes[index].completed = !note.completed
-    //   dispatch({ type: 'SET_NOTES', notes})
-      
-    //   console.log(state.notes);
-    //   try {
-    //     await API.graphql({
-    //       query: UpdateNote,
-    //       variables: { input: { id: note.id, completed: notes[index].completed} }
-    //     })
-    //     if (note.completed == true) {
-    //       setNumber(number + 1)
-    //     } else {
-    //       setNumber(number - 1)
-    //     }
-    //     console.log('note successfully updated!')
-    //     dispatch({ type: 'COMPLETED', notes})
-    //   } catch (err) {
-    //     console.error('error: ', err)
-    //   }
-    // }
-  }, [])
-  
-
-  /*
-  const completion = async(note) => {
-    const index = state.notes.findIndex(n => n.id === note.id)
-    const notes = [...state.notes]
-    notes[index].completed = !note.completed
-    dispatch({ type: 'SET_NOTES', notes})
-
-    try {
-      await API.graphql({
-        query: UpdateNote,
-        variables: { input: { id: note.id, completed: notes[index].completed } }
-      })
-      console.log('note successfully updated!')
-      if (note.completed == true) {
-        setNumber(number + 1);
-      } else {
-        setNumber(number - 1);
-      }
-    } catch (err) {
-      console.error('error: ', err)
-    }
-  }
-  */
     
   const styles = {
     container: {padding: 20},
@@ -214,7 +162,7 @@ const App = () => {
         actions={[
           <p style={styles.p} onClick={() => deleteNote(item)}>Delete</p>,
           <p style={styles.p} onClick={() => updateNote(item)}>
-          {item.completed ? 'completed!' : 'mark completed'}
+          {item.completed ? 'COMPLETED!' : 'mark completed'}
           </p>
         ]}
         >
