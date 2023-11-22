@@ -1,16 +1,16 @@
 import logo from './logo.svg';
 import './App.css';
-import React, {useEffect, useReducer} from 'react'
+import React, {useEffect, useReducer, useState} from 'react'
 import { API } from 'aws-amplify'
 import { List, Input, Button } from 'antd'
 import 'antd/dist/reset.css'
 import { v4 as uuid } from 'uuid'
-import { listNotes } from './graphql/queries'
+import { listNotes, getNote } from './graphql/queries'
 import { createNote as CreateNote,
          deleteNote as DeleteNote,
          updateNote as UpdateNote 
   } from './graphql/mutations'
-import { onCreateNote } from './graphql/subscriptions'
+import { onCreateNote, onUpdateNote } from './graphql/subscriptions'
 
 const CLIENT_ID = uuid()
 
@@ -18,7 +18,8 @@ const initialState = {
   notes: [],
   loading: true,
   error: false,
-  form: { name: '', description: '' }
+  form: { name: '', description: '' },
+  completed: true
 }
 
 
@@ -27,13 +28,13 @@ function reducer(state, action) {
     case 'SET_NOTES':
       return { ...state, notes: action.notes, loading: false }
     case 'ADD_NOTE':
-      return { ...state, notes: [action.note, ...state.notes]}
+      return { ...state, notes: [action.note, ...state.notes], completed: true}
     case 'RESET_FORM':
       return { ...state, form: initialState.form }
     case 'SET_INPUT':
       return { ...state, form: { ...state.form, [action.name]: action.value } }
-    case 'AMOUNT':
-      return { ...state, notes: action.notes, counter: true}
+    case 'COMPLETED':
+      return { ...state, notes: action.notes, completed: true}
     case 'ERROR':
       return { ...state, loading: false, error: true }
     default:
@@ -44,6 +45,12 @@ function reducer(state, action) {
 const App = () => {
 
   const [state, dispatch] = useReducer(reducer, initialState)
+  const [number, setNumber] = useState(0);
+
+  const notes = [...state.notes]
+  const completion = notes
+              .filter(x => x.completed == true)
+  console.log((completion).length)
 
   const fetchNotes = async() => {
     try {
@@ -111,10 +118,11 @@ const App = () => {
     notes[index].completed = !note.completed
     dispatch({ type: 'SET_NOTES', notes})
     
+    console.log(state.notes);
     try {
       await API.graphql({
         query: UpdateNote,
-        variables: { input: { id: note.id, completed: notes[index].completed } }
+        variables: { input: { id: note.id, completed: notes[index].completed} }
       })
       console.log('note successfully updated!')
     } catch (err) {
@@ -141,6 +149,57 @@ const App = () => {
       return () => subscription.unsubscribe()
     }, [])
 
+  useEffect(() => {
+    // const updateNote = async(note) => {
+    //   const index = state.notes.findIndex(n => n.id === note.id)
+    //   const notes = [...state.notes]
+    //   notes[index].completed = !note.completed
+    //   dispatch({ type: 'SET_NOTES', notes})
+      
+    //   console.log(state.notes);
+    //   try {
+    //     await API.graphql({
+    //       query: UpdateNote,
+    //       variables: { input: { id: note.id, completed: notes[index].completed} }
+    //     })
+    //     if (note.completed == true) {
+    //       setNumber(number + 1)
+    //     } else {
+    //       setNumber(number - 1)
+    //     }
+    //     console.log('note successfully updated!')
+    //     dispatch({ type: 'COMPLETED', notes})
+    //   } catch (err) {
+    //     console.error('error: ', err)
+    //   }
+    // }
+  }, [])
+  
+
+  /*
+  const completion = async(note) => {
+    const index = state.notes.findIndex(n => n.id === note.id)
+    const notes = [...state.notes]
+    notes[index].completed = !note.completed
+    dispatch({ type: 'SET_NOTES', notes})
+
+    try {
+      await API.graphql({
+        query: UpdateNote,
+        variables: { input: { id: note.id, completed: notes[index].completed } }
+      })
+      console.log('note successfully updated!')
+      if (note.completed == true) {
+        setNumber(number + 1);
+      } else {
+        setNumber(number - 1);
+      }
+    } catch (err) {
+      console.error('error: ', err)
+    }
+  }
+  */
+    
   const styles = {
     container: {padding: 20},
     input: {marginBottom: 10},
@@ -155,7 +214,7 @@ const App = () => {
         actions={[
           <p style={styles.p} onClick={() => deleteNote(item)}>Delete</p>,
           <p style={styles.p} onClick={() => updateNote(item)}>
-          {item.completed ? 'completed' : 'mark completed'}
+          {item.completed ? 'completed!' : 'mark completed'}
           </p>
         ]}
         >
@@ -188,7 +247,8 @@ const App = () => {
         type="primary"
       >Create Note</Button>
       <hr />
-        <h3>{(state.notes).length} total notes</h3>
+        <h3>{(state.notes).length} total notes / {(completion).length} completed</h3>
+        {console.log(state.notes)}
       <hr />
     <List
         loading={state.loading}
